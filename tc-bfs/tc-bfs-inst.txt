@@ -1,0 +1,21 @@
+[Create a VirtualBox 32-bit Ubuntu Machine]
+1) Install VirtualBox (http://download.virtualbox.org/virtualbox/4.3.8/VirtualBox-4.3.8-92456-Win.exe)
+2) Install VirtualBox Extension Pack (http://download.virtualbox.org/virtualbox/4.3.8/Oracle_VM_VirtualBox_Extension_Pack-4.3.8-92456.vbox-extpack)
+3) Download 32-bit Ubuntu Installer (http://www.ubuntu.com/download/desktop/thank-you?distro=desktop&bits=32&release=lts)
+4) Create new Virtual Machine; Configure size of base memory, number of processors (enable I/O APIC as well)
+5) Under Storage, insert the Installer image downloaded earlier as a CD/DVD drive in IDE controller
+6) Start the machine and Install Ubuntu
+7) Boot Ubuntu
+8) Install Guest Additions (Host+D; by default RCtrl+D)
+
+[Create Cross-Compiler in Virtual Machine (VM)]
+1) Copy tc-bfs.tar.gz into the VM
+2) Extract tc-bfs.tar.gz (tar xf tc-bfs.tar.gz)
+3) If desired, modify "tc-bfs/modify.me" especially the following variables:
+	a) PREFIX - "scratch" directory
+	b) MAKE_FLAGS - set "-j" based on the number of enabled processors (or as it is) for faster building
+4) Open a Terminal and change directory to tc-bfs (cd tc-bfs)
+5) If desired, configure uClibc (./configure-uclibc.sh)
+6) Let's build! (./build-toolchain.sh)
+7) Note: If everything went well, an archived toolchain will be created as "./tc-bfs/<target>.tar.gz"
+8) To rebuild, optionally sanitize (./sanitize, or ./sanitize all)
