@@ -110,7 +110,7 @@ static void queueNotification(TimerInfo *info, int notification)
  */
 static void * timer(TimerInfo *info)
 {
-	uint64_t intervalCount;
+	unsigned long long intervalCount;
 	struct timespec interval;
 	struct timespec *currentInterval;
 	struct timespec remainingInterval;
