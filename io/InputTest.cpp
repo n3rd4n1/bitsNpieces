@@ -38,7 +38,7 @@ public:
 
 	virtual void changed(Input *input, int value)
 	{
-		printf("[Changed] %s %d\n", input->name().data(), value);
+		printf("[Changed] %s %d\n", input->name().c_str(), value);
 	}
 
 	virtual void deactivated(Input *input)

@@ -113,7 +113,7 @@ Input::Input(InputDelegate &delegate, string name)
 	info.name = name;
     info.delegate = &delegate;
 
-    if((info.fd = open(path.data(), O_RDONLY)) == -1)
+    if((info.fd = open(path.c_str(), O_RDONLY)) == -1)
     {
     	perror("open");
     	return;
