@@ -31,5 +31,6 @@ the delegate, and the second is the timer thread which employs nanosleep() to re
 block for the interval's duration and queues notifications to be later processed by the
 notifier thread.
 
-This uses the `pthread` library and some platform specific time functions. This should
-be useable in `Linux` and `OS X`. Not tested on other Unix platforms.
+This uses the `libpthread` library, and the `librt` library on `Linux`, and some platform
+specific time functions. This should be useable in `Linux` and `OS X`. Not tested on
+other Unix platforms.
