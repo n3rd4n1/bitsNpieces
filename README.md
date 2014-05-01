@@ -34,3 +34,14 @@ notifier thread.
 This uses the `libpthread` library, and the `librt` library on `Linux`, and some platform
 specific time functions. This should be useable in `Linux` and `OS X`. Not tested on
 other Unix platforms.
+
+io
+--
+In and out.
+
+### Input.cpp, Input.h, InputTest.cpp
+
+A convenience class to interface with `Linux`'s input devices (`/dev/input`). This is a
+delegate-based implementation with the delegate receiving notifications from the class.
+
+This uses the `libpthread` library and useable only in `Linux`.
