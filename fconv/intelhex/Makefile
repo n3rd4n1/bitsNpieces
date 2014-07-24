@@ -27,7 +27,7 @@ HEX_SAMPLES=sample/hex
 BIN_SAMPLES=sample/bin
 
 CC=gcc
-CFLAGS=-Wall -DSTANDALONE
+CFLAGS=-Wall -DINTELHEX_STANDALONE -DINTELHEX_VERBOSE
 SOURCES=intelhex.c
 HEADERS=intelhex.h
 BIN=intelhex

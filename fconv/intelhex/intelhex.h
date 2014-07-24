@@ -56,6 +56,11 @@
 #include <stdint.h>
 
 /**
+ * NOTE:
+ *   to print error and warning messages, define INTELHEX_VERBOSE
+ */
+
+/**
  * invalid address value used to check EIP, CS, and IP values
  */
 #define INTEL_HEX_INVALID_ADDRESS		((uint32_t)-1)
@@ -163,6 +168,42 @@ int intelHex_hexToBin(const char *inputFilename, const IntelHex *inputHex, const
  * note: don't forget to destroy outputHex
  */
 int intelHex_binToHex(const char *inputFilename, const IntelHex *inputHex, const char *outputFilename, IntelHex *outputHex, uint32_t flags);
+
+/**
+ * initialize the hex info structure
+ *
+ * hex - IntelHex to initialize
+ * flags - conversion parameters
+ *
+ * 0 if successful, non-zero otherwise
+ */
+int intelHex_initializeHexInfo(IntelHex *hex, uint32_t flags);
+
+/**
+ * save buffer data or file data into hex info structure
+ *
+ * hex - IntelHex to save data into
+ * data - buffer data; must not be NULL if file is NULL, NULL otherwise
+ * file - file data; must not be NULL if data is NULL, NULL otherwise
+ * size - size of data
+ * baseAddress - memory base address of data being saved
+ *
+ * 0 if successful, non-zero otherwise
+ */
+int intelHex_saveDataToHexInfo(IntelHex *hex, const uint8_t *data, FILE *file, uint64_t size, uint32_t baseAddress);
+
+/**
+ * copy data from hex info structure
+ *
+ * hex - IntelHex to copy data from
+ * baseAddress - memory base address of data being copied
+ * data - destination buffer
+ * file - destination file
+ * size - size of data
+ *
+ * 0 if successful, non-zero otherwise
+ */
+int intelHex_copyDataFromHexInfo(IntelHex *hex, uint32_t baseAddress, uint8_t *data, FILE *file, uint64_t size);
 
 /**
  * destroy the contents of hex info structure

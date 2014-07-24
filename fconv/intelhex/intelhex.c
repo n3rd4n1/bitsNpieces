@@ -30,8 +30,14 @@
 #include "intelhex.h"
 
 #define PREFIX			"intelhex: "
+
+#ifdef INTELHEX_VERBOSE
 #define ERROR(...)		fprintf(stderr, PREFIX "error: " __VA_ARGS__)
 #define WARNING(...)	fprintf(stderr, PREFIX "warning: " __VA_ARGS__)
+#else
+#define ERROR(...)
+#define WARNING(...)
+#endif
 
 #define MAX_32BIT		0xffffffff
 #define MAX_16BIT		0xfffff
@@ -211,8 +217,11 @@ static inline IntelHexData * copyHexData(const uint8_t *sourceData, FILE *source
 	return (tail == NULL) ? *destinationData : tail;
 }
 
-static void clearHexInfo(IntelHex *hex, uint32_t flags)
+int intelHex_initializeHexInfo(IntelHex *hex, uint32_t flags)
 {
+	if(hex == NULL)
+		return -1;
+
 	hex->eip = INTEL_HEX_INVALID_ADDRESS;
 	hex->cs = INTEL_HEX_INVALID_ADDRESS;
 	hex->ip = INTEL_HEX_INVALID_ADDRESS;
@@ -235,10 +244,11 @@ static void clearHexInfo(IntelHex *hex, uint32_t flags)
 	default:
 		hex->endmostAddress = MAX_32BIT;
 		hex->endAddress = MAX_8BIT;
-		return;
+		return 0;
 	}
 
 	hex->endAddress = hex->endmostAddress;
+	return 0;
 }
 
 static void freeHexMemory(IntelHexMemory *memory)
@@ -259,10 +269,10 @@ void intelHex_destroyHexInfo(IntelHex *hex)
 		freeHexMemory(memory);
 	}
 
-	clearHexInfo(hex, 0);
+	intelHex_initializeHexInfo(hex, 0);
 }
 
-static int saveDataToHexInfo(IntelHex *hex, const uint8_t *data, FILE *file, uint64_t size, uint32_t baseAddress, uint32_t flags)
+int intelHex_saveDataToHexInfo(IntelHex *hex, const uint8_t *data, FILE *file, uint64_t size, uint32_t baseAddress)
 {
 	IntelHexMemory *previousMemory = NULL;
 	IntelHexMemory *currentMemory = NULL;
@@ -270,6 +280,18 @@ static int saveDataToHexInfo(IntelHex *hex, const uint8_t *data, FILE *file, uin
 	IntelHexData *head;
 	IntelHexData *tail;
 	uint32_t endAddress;
+
+	if(hex == NULL)
+	{
+		ERROR("hex info structure cannot be NULL\n");
+		return -1;
+	}
+
+	if((data == NULL && file == NULL) || (data != NULL && file != NULL))
+	{
+		ERROR("only one of data or file should not be NULL\n");
+		return -1;
+	}
 
 	if(size < 1)
 	{
@@ -372,6 +394,70 @@ static int saveDataToHexInfo(IntelHex *hex, const uint8_t *data, FILE *file, uin
 	return 0;
 }
 
+int intelHex_copyDataFromHexInfo(IntelHex *hex, uint32_t baseAddress, uint8_t *data, FILE *file, uint64_t size)
+{
+	IntelHexMemory *memory;
+	uint32_t endAddress;
+
+	if(hex == NULL)
+	{
+		ERROR("hex info structure cannot be NULL\n");
+		return -1;
+	}
+
+	if(size < 1)
+	{
+		ERROR("data size should be at least 1 byte\n");
+		return -1;
+	}
+
+	for(memory = hex->memory; memory != NULL; memory = memory->next)
+	{
+		endAddress = memory->baseAddress + memory->size - 1;
+
+		if(baseAddress >= memory->baseAddress && baseAddress <= endAddress)
+		{
+			IntelHexData *hexData;
+			uint64_t address;
+			uint8_t *sourceData;
+			uint32_t copySize;
+
+			if((baseAddress + size - 1) > endAddress)
+			{
+				ERROR("cannot copy all of the requested memory data\n");
+				return -1;
+			}
+
+			if(data == NULL && file == NULL)
+				return 0;
+
+			address = memory->baseAddress;
+
+			for(hexData = memory->head; ; hexData = hexData->next)
+			{
+				if((address += hexData->size) > baseAddress)
+				{
+					copySize = address - baseAddress;
+					sourceData = &hexData->data[hexData->size - copySize];
+
+					if(copySize > size)
+						copySize = size;
+
+					memcpy(data, sourceData, copySize);
+					baseAddress += copySize;
+					data += copySize;
+
+					if((size -= copySize) < 1)
+						return 0;
+				}
+			}
+		}
+	}
+
+	ERROR("requested memory data cannot be located\n");
+	return -1;
+}
+
 static inline int copyHexInfo(const IntelHex *sourceHex, IntelHex *destinationHex, uint32_t flags)
 {
 	IntelHexMemory *memory;
@@ -379,7 +465,7 @@ static inline int copyHexInfo(const IntelHex *sourceHex, IntelHex *destinationHe
 	uint64_t memorySize;
 	uint64_t totalSize;
 
-	clearHexInfo(destinationHex, flags);
+	intelHex_initializeHexInfo(destinationHex, flags);
 
 	if(checkEip(sourceHex->eip) != 0 || checkCsAndIp(sourceHex->cs, sourceHex->ip) != 0)
 		return -1;
@@ -407,7 +493,7 @@ static inline int copyHexInfo(const IntelHex *sourceHex, IntelHex *destinationHe
 				return -1;
 			}
 
-			if(saveDataToHexInfo(destinationHex, data->data, NULL, data->size, memory->baseAddress + totalSize, flags) != 0)
+			if(intelHex_saveDataToHexInfo(destinationHex, data->data, NULL, data->size, memory->baseAddress + totalSize) != 0)
 				return -1;
 
 			totalSize += data->size;
@@ -522,7 +608,7 @@ static int readHexInfoFromBinFile(FILE *file, IntelHex *hex, uint32_t flags)
 	uint32_t baseAddress;
 	uint32_t size;
 
-	clearHexInfo(hex, flags);
+	intelHex_initializeHexInfo(hex, flags);
 
 	if(readValueFromBinFile(&hex->eip, file) != 0)
 	{
@@ -565,7 +651,7 @@ static int readHexInfoFromBinFile(FILE *file, IntelHex *hex, uint32_t flags)
 			return -1;
 		}
 
-		if(saveDataToHexInfo(hex, NULL, file, (size == 0) ? 0x100000000ULL : (uint64_t)size, baseAddress, flags) != 0)
+		if(intelHex_saveDataToHexInfo(hex, NULL, file, (size == 0) ? 0x100000000ULL : (uint64_t)size, baseAddress) != 0)
 			return -1;
 	}
 
@@ -674,7 +760,7 @@ static int writeHexRecordToHexFile(FILE *file, uint32_t type, uint32_t length, u
 
 	if(type == INTEL_HEX_RECORD_DATA)
 	{
-		if(writeDataToHexFile(file, length, data, &checksum) != 0)
+		if(writeDataToHexFile(file, length, (uint8_t *)data, &checksum) != 0)
 		{
 			ERROR("failed to write record data to hex file\n");
 			return -1;
@@ -852,7 +938,7 @@ static int readHexInfoFromHexFile(FILE *file, IntelHex *hex, uint32_t flags)
 	int hasNewline;
 	int i;
 
-	clearHexInfo(hex, flags);
+	intelHex_initializeHexInfo(hex, flags);
 
 	while(1)
 	{
@@ -901,7 +987,7 @@ static int readHexInfoFromHexFile(FILE *file, IntelHex *hex, uint32_t flags)
 
 		checksum = byteCount + (offset & 0xff) + (offset >> 8) + recordType;
 
-		for(i = 0; i < byteCount; i++)
+		for(i = 0; (uint32_t)i < byteCount; i++)
 		{
 			if(readValueFromHexFile(file, 2, &value) != 0)
 			{
@@ -946,7 +1032,7 @@ static int readHexInfoFromHexFile(FILE *file, IntelHex *hex, uint32_t flags)
 					size = ((offset + byteCount) > 0x10000) ? (0x10000 - offset) : byteCount;
 				}
 
-				if(saveDataToHexInfo(hex, data, NULL, size, address, flags) != 0)
+				if(intelHex_saveDataToHexInfo(hex, data, NULL, size, address) != 0)
 					return -1;
 
 				data += size;
@@ -1101,7 +1187,7 @@ inline int intelHex_binToHex(const char *inputFilename, const IntelHex *inputHex
 	return intelHex_convert(INTEL_HEX_FORMAT_BIN, inputFilename, inputHex, INTEL_HEX_FORMAT_HEX, outputFilename, outputHex, flags);
 }
 
-#ifdef STANDALONE
+#ifdef INTELHEX_STANDALONE
 
 static void usage(const char *name)
 {
@@ -1263,4 +1349,4 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-#endif /* STANDALONE */
+#endif /* INTELHEX_STANDALONE */
