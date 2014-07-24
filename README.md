@@ -1,16 +1,35 @@
 bitsNpieces
 ===========
 
-tc-bfs
-------
-Set of bash scripts to build a GNU toolchain from scratch. Good as reference only.
-
 algo
 ----
 Some algorithms.
 
 ### binheap.c
 A binary heap implementation in linked list data structure.
+
+fconv
+-----
+File converters.
+
+### intelhex
+
+A file converter between Intel's hexadecimal object file and a simple binary file.
+
+io
+--
+In and out.
+
+### Input.cpp, Input.h, InputTest.cpp
+
+A convenience class to interface with `Linux`'s input devices (`/dev/input`). This is a
+delegate-based implementation with the delegate receiving notifications from the class.
+
+This uses the `libpthread` library and useable only in `Linux`.
+
+tc-bfs
+------
+Set of bash scripts to build a GNU toolchain from scratch. Good as reference only.
 
 timer
 -----
@@ -34,14 +53,3 @@ notifier thread.
 This uses the `libpthread` library, and the `librt` library on `Linux`, and some platform
 specific time functions. This should be useable in `Linux` and `OS X`. Not tested on
 other Unix platforms.
-
-io
---
-In and out.
-
-### Input.cpp, Input.h, InputTest.cpp
-
-A convenience class to interface with `Linux`'s input devices (`/dev/input`). This is a
-delegate-based implementation with the delegate receiving notifications from the class.
-
-This uses the `libpthread` library and useable only in `Linux`.
