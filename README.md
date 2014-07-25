@@ -22,10 +22,17 @@ In and out.
 
 ### Input.cpp, Input.h, InputTest.cpp
 
-A convenience class to interface with `Linux`'s input devices (`/dev/input`). This is a
+A convenience class to interface with Linux's input devices, `/dev/input`. This is a
 delegate-based implementation with the delegate receiving notifications from the class.
 
-This uses the `libpthread` library and useable only in `Linux`.
+This uses the `pthread` library and is usable only in Linux.
+
+### GPIO.cpp, GPIO.h, GPIOTest.cpp
+
+A convenience class to interface with Linux's GPIO Sysfs, `/sys/class/gpio`. This is a
+delegate-based implementation with the delegate receiving  notifications from the class.
+
+This uses the `pthread` library and is usable only in Linux.
 
 tc-bfs
 ------
@@ -50,6 +57,6 @@ the delegate, and the second is the timer thread which employs nanosleep() to re
 block for the interval's duration and queues notifications to be later processed by the
 notifier thread.
 
-This uses the `libpthread` library, and the `librt` library on `Linux`, and some platform
-specific time functions. This should be useable in `Linux` and `OS X`. Not tested on
-other Unix platforms.
+This uses the `pthread` library, as well as the `rt` library in Linux. This also uses
+some platform-specific time functions. This should be useable in Linux and OS X; not
+tested on other Unix platforms.
