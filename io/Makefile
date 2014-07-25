@@ -1,9 +1,13 @@
 CC=g++
+CFLAGS=-Wall
 
-default all: InputTest
+default all: InputTest GPIOTest
 
 clean:
-	rm -f InputTest
+	rm -f InputTest GPIOTest
 
 InputTest:
-	$(CC) -o $@ Input.cpp InputTest.cpp -lpthread
+	$(CC) $(CFLAGS) -o $@ Input.cpp InputTest.cpp -lpthread
+
+GPIOTest:
+	$(CC) $(CFLAGS) -o $@ GPIO.cpp GPIOTest.cpp
